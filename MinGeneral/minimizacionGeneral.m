@@ -1,3 +1,5 @@
+clear all
+clc
 %MINIMIZACIÓN DE LA INTEGRAL DE LA DIFERENCIA ENTRE LA CONCENTRACIÓN DEL
 %FÁRMACO EN CASO GENERAL (CON VARIABLES N, T_1...,T_N,D_1,...,D_N) Y UNA CONCENTRACIÓN IDEAL
 global Tf
@@ -9,7 +11,7 @@ global lambda
 global N
 format short e
 Tf=30;%último día en el que se ven los efectos
-dmin=4;%cantidad de fármaco mínima que se puede administrar
+dmin=14;%cantidad de fármaco mínima que se puede administrar
 dmax=30;%cantidad de fármaco máximo que se puede administrar
 D=300;%cantidad total de fármaco administrado
 lambda=0.38;%el factor de la exponencial decreciente
@@ -95,8 +97,8 @@ lambda=0.38;%el factor de la exponencial decreciente
 
 
 %% TOMO UN VECTOR X, UN CD Y SU N ÓPTIMO (OBTENCIÓN DE GRÁFICAS)
-cd=4;
-N=10;
+N=17;
+cd=20;
 x0=[linspace(0,30,N),20*ones(1,N)];%x=[t=(t1,...,tN),d=(d1,...,dN)];
 fun=@(x) optisqGen(x)-2*cd*optilinGen(x)+cd^2*Tf;%función ya integrada a minimizar
 A=sparse(N,2*N); %condiciones lineales de desigualdad
@@ -104,22 +106,28 @@ A(1:N,1:N)=diag(ones(N,1))+diag(-ones(N-1,1),1);A(N,N+1:2*N)=ones(N,1);A(N,N)=0;
 b=-0.3*ones(N,1);b(N,1)=D;
 Aeq=[];beq=[];%no hay condiciones lineales de igualdad
 lb=[zeros(1,N),dmin*ones(1,N)];%valores mínimos de los tiempos y las dosis administradas
-ub=[Tf*ones(1,N-1),0.999*Tf,dmax*ones(1,N)];%valores máximos de los tiempos y las dosis administradas
+ub=[0,Tf*ones(1,N-2),0.999*Tf,dmax*ones(1,N)];%valores máximos de los tiempos y las dosis administradas (tomo t1=0 por simplicidad, haciendo que sus cotas superior
+% e inferior sean nulas)
 options=optimset('TolCon',eps,'TolX', eps,'TolFun',eps,'MaxIter',1e12,'MaxFunEvals',1e12);
 [x,fval,exitflag,output]=fmincon(fun,x0,A,b,Aeq,beq,lb,ub,[],options);%el mínimo valor de la función se obtiene para x
 x2=round(x,2);
 fval2=fun(x2);
 abs(fval-fval2);%NO VARIA APENAS HACIENDO LA APROXIMACION
 for i=2:1:N %para no tomar la primera concentración que suele ser distinta
-    %utilizo el eps por tener una heaviside en cada x2(i)
-    min(i-1)=ec1cGen(x2(i)-eps,x2);%valor de la concentración en cada mínimo
-    max(i-1)=ec1cGen(x2(i)+10*eps,x2);%valor de la concentración en cada máximo
+    %utilizo el eps por tener un salto en cada x2(i)
+    min(i-1)=ec1cGen(x2(i)-eps^0.75,x2);%valor de la concentración en cada mínimo
+    max(i-1)=ec1cGen(x2(i)+eps^0.75,x2);%valor de la concentración en cada máximo
 end
-minimum=round(mean(min),2); %calculo un valor mínimo de la concentración
-maximum=round(mean(max),2); %calculo un valor máximo de la concentración
+minimum=round(mean(min),2) %calculo un valor mínimo de la concentración
+maximum=round(mean(max),2) %calculo un valor máximo de la concentración
 concentracionGen(x2); %para plotear el resultado
-
 
 % %% LÍNEAS DE CÓDIGO PARA LOS EJEMPLOS NUMÉRICOS
 % fun([linspace(0,27,10),10*ones(1,10)])
 % fun([0,1,2,3,4,5,6,7,8,9,10*ones(1,10)])
+% dmin=10;
+% %Para ver el cd optimo y el resto para un N y un dmin determinado
+% N=20;
+% x=[linspace(0,30,N),dmin*ones(1,N)];
+% cd=sum(x(N+1:2*N).*(1-exp(lambda*(x(1:N)-Tf))))/(lambda*Tf)
+% fun(x)

@@ -8,11 +8,11 @@ global tf
 % n=length(ti);
 % di=20*ones(n);%dosis que se aplica cada vez SEGÚN ARTÍCULO
 D=300;
-% n=15;%cantidad de días que se aplican las dosis
+n=170;%cantidad de días que se aplican las dosis
 % ti=linspace(0,14,n);%tiempos en los que se aplica el fármaco, equiespaciados
 % di=D*ones(n)/n;%cantidad de dosis que se aplica cada vez
-ti=[0:1.32:1.32*14];
-di=10*ones(1,n);
+ti=[0,1.12,linspace(1.32+1.12,1.32*(n-2)+1.12,n-2)];
+di=10*ones(1,n);di(1)=23.45;
 con=0;%al principio no hay ningún fármaco
 %k1=10.1;%para el fármaco TNP
 %k1=1.7;%para el fármaco Endostatina
