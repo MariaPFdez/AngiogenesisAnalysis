@@ -1,10 +1,9 @@
 %CÁLCULO DE LA INTEGRAL DE C(T)^2 MEDIANTE SUMAS (PROCEDIMIENTO ANALÍTICO)
 function con=optisqGen(x)
-global Tf
-global lambda
-global N
-ti=x(1:N);%vector de tiempos en los que se administra la dosis
-di=x(N+1:2*N);%cantidad de fármaco administrado en cada caso
+global Tf lambda N
+
+ti=[0,x(1:N-1)];%vector de tiempos en los que se administra la dosis
+di=x(N:2*N-1);%cantidad de fármaco administrado en cada caso
 con1=0;%se comienza sin concentración en todos los sumatorios
 con2=0;
 con=0;
