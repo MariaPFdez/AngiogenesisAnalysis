@@ -12,10 +12,13 @@ lambda=0.38;%el factor de la exponencial decreciente
 
 %% PLOTEO EL VALOR DE LA FUNCIÓN J PARA CADA UNA DE LAS CD EN FUNCIÓN DE N
 j=0;
+i=0;
 k=0;
 Nmax=min(floor(D/dmin),ceil(Tf/0.3));
 fval=zeros(length(D/dmax:1:D/dmin),1);
-for cd=10:1:30
+color=["#FF1D87","#1DFF4F","#901DFF"];
+for cd=12:8:28
+    i=i+1;
     j=0;
     k=k+1;
     for N=Nmax:-1:D/dmax
@@ -32,9 +35,9 @@ for cd=10:1:30
         [x,fval(length(fval)-j,1)]=fmincon(fun,x0,A,b,Aeq,beq,lb,ub,[],options)%el mínimo valor de la función se obtiene para x
         j=j+1;
     end
-    plot([D/dmax:1:D/dmin],fval),xlabel('Number of doses \it{N}'),ylabel('Objective function of (P_1) \it{J}'),title('\it{J} \rm{function for} \it{N} \in \rm{[}\it{D/d_{max}},\it{D/d_{min}}\rm{]} if \it{c_d} \in \rm{[}\it{D/d_{max}},\it{D/d_{min}}\rm{]}')
+    plot([D/dmax:1:D/dmin],fval,'.','MarkerSize',10,'Color',color(i)),xlabel('Number of doses \it{N}'),ylabel('Objective function of (P_1^N), \it{J^N}'),title('\it{J^N} \rm{function for} \it{N} \in \rm{[}\it{D/d_{max}},\it{D/d_{min}}\rm{]} and different \it{c_d}')
     hold on
-    legendInfo{k}=[num2str(cd) '(mg/L)'];
+    legendInfo{k}=['\it{c_d = }' num2str(cd) ' \rm{mg/L}'];
     legend(legendInfo)
 end
 
@@ -96,8 +99,8 @@ hold on %EL N ÓPTIMO AUMENTA A MEDIDA QUE LO HACE CD
 %% TOMO UN VECTOR X, UN CD Y SU N ÓPTIMO (OBTENCIÓN DE GRÁFICAS)
 %vamos a asumir que la primera dosis se aplica en tiempo 0, y no la vamos a
 %añadir como incógnita.
-N=23;
-cd=20;
+N=28;
+cd=30;
 x0=[linspace(0.3,30,N-1),20*ones(1,N)];%x=[t=(t1,...,tN),d=(d1,...,dN)];
 fun=@(x) optisqGen(x)-2*cd*optilinGen(x)+cd^2*Tf;%función ya integrada a minimizar
 A=sparse(N-1,2*N-1); %condiciones lineales de desigualdad
@@ -109,8 +112,8 @@ ub=[Tf*ones(1,N-2),0.999*Tf,dmax*ones(1,N)];%valores máximos de los tiempos y la
 % e inferior sean nulas)
 options=optimset('TolCon',eps,'TolX', eps,'TolFun',eps,'MaxIter',1e12,'MaxFunEvals',1e12);
 [x,fval,exitflag,output]=fmincon(fun,x0,A,b,Aeq,beq,lb,ub,[],options);%el mínimo valor de la función se obtiene para x
-x2=round(x,2);
-fval2=fun(x2);
+x2=round(x,2)
+fval2=fun(x2)
 abs(fval-fval2);%NO VARIA APENAS HACIENDO LA APROXIMACION
 for i=2:1:N %para no tomar la primera concentración que suele ser distinta
     %utilizo el eps por tener un salto en cada x2(i)
@@ -119,21 +122,26 @@ for i=2:1:N %para no tomar la primera concentración que suele ser distinta
 end
 minimum=round(mean(mini),2); %calculo un valor mínimo de la concentración
 maximum=round(mean(maxi),2); %calculo un valor máximo de la concentración
-concentracionGen(x2,'-r') %para plotear el resultado
+concentracionGen(x2,"#FF3281"),legendInfo{1}='Numerically' %para plotear el resultado
 hold on
 
-%% SE TRATA DE ADIVINAR LAS SOLUCIONES DEL PROBLEMA
+%% SE TRATA DE ADIVINAR LAS SOLUCIONES DEL PROBLEMA (PTO DE VISTA HEURÍSTICO)
 %supongo que conozco cd y estimando N trato de calcular las dosis y los
 %tiempos de administración
 %cd=12;
+cd=30;
 Nmax=min(floor(D/dmin),ceil(Tf/0.3));
-N=max(min(round(lambda*Tf*cd/dmin),Nmax),1)
+N=max(min(round(lambda*Tf*cd/dmin),Nmax),1);
 test=linspace(Tf/N,Tf,N-1);
-dest=[min(cd+0.3*dmin,dmax),dmin*ones(1,N-1)];
+dest=[min([cd+0.3*dmin,dmax,D-dmin*(N-1)]),dmin*ones(1,N-1)];
 xest=[test,dest];
 fun=@(x) optisqGen(x)-2*cd*optilinGen(x)+cd^2*Tf;%función ya integrada a minimizar
 fest=fun(xest)
-concentracionGen(xest,'-g')
+concentracionGen(xest,"#32FFA7"),legendInfo{2}='C_d',legendInfo{3}='Estimated',legend(legendInfo)
+%cuando cd=30 resulta mejor que el caso numérico, pero el punto que aparece
+%como solución no es aceptable. Si cambio dest y añado una nueva condición a la dosis
+%inicial, tal que se vea también la limitación con D la situación cambia.
+
 
 %% LÍNEAS DE CÓDIGO PARA LOS EJEMPLOS NUMÉRICOS
 fun([linspace(0,27,10),10*ones(1,10)])
